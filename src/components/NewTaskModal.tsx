@@ -8,7 +8,7 @@ function FileBrowser({ onSelect, currentPath }: any) {
   const [items, setItems] = useState<any[]>([]);
   const [path, setPath] = useState(currentPath);
   useEffect(() => {
-    fetch(\`/api/fs/list?path=\${encodeURIComponent(path)}\`).then(r=>r.json()).then(setItems).catch(()=>{});
+    fetch(`/api/fs/list?path=${encodeURIComponent(path)}`).then(r=>r.json()).then(setItems).catch(()=>{});
   }, [path]);
   return (
     <div className="border rounded-lg bg-gray-50 h-32 overflow-y-auto p-2 text-sm mt-2">
@@ -36,9 +36,11 @@ export function NewTaskModal({ isOpen, onClose, onSubmit }: Props) {
   const [cookies, setCookies] = useState('');
   const [savePath, setSavePath] = useState('downloads');
   const [showBrowser, setShowBrowser] = useState(false);
+  const [format, setFormat] = useState('best');
   
   const [xAuthToken, setXAuthToken] = useState('');
   const [xCt0, setXCt0] = useState('');
+  const [weiboScope, setWeiboScope] = useState('all');
 
   useEffect(() => {
     if (isOpen) {
@@ -54,7 +56,10 @@ export function NewTaskModal({ isOpen, onClose, onSubmit }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ platform, url, cookies, save_path: savePath, x_auth_token: xAuthToken, x_ct0: xCt0 });
+    onSubmit({ 
+      platform, url, cookies, save_path: savePath, format_mode: format, 
+      x_auth_token: xAuthToken, x_ct0: xCt0, weibo_scope: weiboScope
+    });
     onClose();
   };
 
@@ -69,7 +74,7 @@ export function NewTaskModal({ isOpen, onClose, onSubmit }: Props) {
           <div className="flex gap-2">
             {PLATFORMS.map(p => (
               <button key={p.id} type="button" onClick={() => setPlatform(p.id as Platform)}
-                className={\`flex-1 py-2 rounded-lg text-sm font-medium \${platform === p.id ? p.color + ' text-white' : 'bg-gray-100 text-gray-600'}\`}>
+                className={`flex-1 py-2 rounded-lg text-sm font-medium ${platform === p.id ? p.color + ' text-white' : 'bg-gray-100 text-gray-600'}`}>
                 {p.name}
               </button>
             ))}
@@ -85,17 +90,19 @@ export function NewTaskModal({ isOpen, onClose, onSubmit }: Props) {
           {platform === 'x' && (
             <div className="bg-slate-50 p-4 rounded-xl space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                 <input type="text" value={xAuthToken} onChange={e=>setXAuthToken(e.target.value)} placeholder="auth_token (必填)" className="w-full p-2 text-xs border rounded bg-white" />
-                 <input type="text" value={xCt0} onChange={e=>setXCt0(e.target.value)} placeholder="ct0 (必填)" className="w-full p-2 text-xs border rounded bg-white" />
+                 <input type="text" value={xAuthToken} onChange={e=>setXAuthToken(e.target.value)} placeholder="auth_token" className="w-full p-2 text-xs border rounded bg-white" />
+                 <input type="text" value={xCt0} onChange={e=>setXCt0(e.target.value)} placeholder="ct0" className="w-full p-2 text-xs border rounded bg-white" />
               </div>
             </div>
           )}
 
           {platform === 'weibo' && (
              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <Cookie className="w-4 h-4 text-orange-500" /> <span>Cookies (必填)</span>
-                </label>
+                <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                        <Cookie className="w-4 h-4 text-orange-500" /> <span>Cookies (必填)</span>
+                    </label>
+                </div>
                 <textarea value={cookies} onChange={e => setCookies(e.target.value)} placeholder="粘贴 SUB=... 或 完整Cookie" className="w-full p-3 bg-gray-50 border rounded-xl text-xs h-20" />
              </div>
           )}
