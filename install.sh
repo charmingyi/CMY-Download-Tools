@@ -3,7 +3,9 @@ set -e
 
 REPO_URL="https://github.com/charmingyi/CMY-Download-Tools.git"
 PROJECT_NAME="CMY-Download-Tools"
+# [关键变更] 默认监听 :: (同时支持 IPv6 和 IPv4)
 PORT=8000
+BIND_HOST="::" 
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -47,16 +49,31 @@ build_frontend() {
     npm run build
 }
 
-restart_service() {
-    echo -e "${GREEN}🔄 重启服务...${NC}"
-    pkill -f uvicorn || true
-    pkill -f tmd || true
-    if systemctl is-active --quiet cmy-tools; then
-        systemctl restart cmy-tools
-    else
-        nohup uvicorn backend.server:app --host :: --port $PORT > system.log 2>&1 &
-    fi
-    echo -e "${GREEN}✅ 完成！访问地址: http://$(curl -s ifconfig.me):$PORT${NC}"
+# [关键变更] 提取出配置服务函数，并在更新时也调用它
+setup_service() {
+    echo -e "${GREEN}🔧 配置系统服务 (IPv6支持)...${NC}"
+    WORK_DIR=$(pwd)
+    SERVICE_FILE="/etc/systemd/system/cmy-tools.service"
+
+    # 强制覆盖旧配置
+    cat <<INI > $SERVICE_FILE
+[Unit]
+Description=CMY Tools Service
+After=network.target
+[Service]
+User=root
+WorkingDirectory=$WORK_DIR
+# 使用 :: 监听
+ExecStart=$WORK_DIR/venv/bin/uvicorn backend.server:app --host $BIND_HOST --port $PORT
+Restart=always
+[Install]
+WantedBy=multi-user.target
+INI
+
+    systemctl daemon-reload
+    systemctl enable cmy-tools
+    # 重启服务以应用新配置
+    systemctl restart cmy-tools
 }
 
 if [ "$choice" == "1" ]; then
@@ -70,25 +87,8 @@ if [ "$choice" == "1" ]; then
     cd $PROJECT_NAME
     setup_backend
     build_frontend
-    
-    WORK_DIR=$(pwd)
-    SERVICE_FILE="/etc/systemd/system/cmy-tools.service"
-    cat <<INI > $SERVICE_FILE
-[Unit]
-Description=CMY Tools Service
-After=network.target
-[Service]
-User=root
-WorkingDirectory=$WORK_DIR
-ExecStart=$WORK_DIR/venv/bin/uvicorn backend.server:app --host :: --port $PORT
-Restart=always
-[Install]
-WantedBy=multi-user.target
-INI
-    systemctl daemon-reload
-    systemctl enable cmy-tools
-    systemctl start cmy-tools
-    echo -e "${GREEN}✅ 安装并启动完成！${NC}"
+    setup_service
+    echo -e "${GREEN}✅ 安装完成！访问: http://[::]:$PORT${NC}"
 
 elif [ "$choice" == "2" ]; then
     echo -e "${GREEN}🚀 开始更新...${NC}"
@@ -105,7 +105,11 @@ elif [ "$choice" == "2" ]; then
     
     setup_backend
     build_frontend
-    restart_service
+    
+    # [关键] 更新时强制重写服务配置 (解决端口监听问题)
+    setup_service
+    
+    echo -e "${GREEN}✅ 升级完成！访问: http://[::]:$PORT${NC}"
 
 else
     echo "退出。"
