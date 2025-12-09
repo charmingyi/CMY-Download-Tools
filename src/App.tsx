@@ -21,8 +21,13 @@ export default function App() {
     fetch(`${API}/api/auth_check`)
       .then(r => r.json())
       .then(data => {
-         if (!data.locked) { setAuthed(true); setRole('admin'); } 
-         else if (data.authed) { setAuthed(true); setRole(data.role); }
+         if (!data.locked) {
+             setAuthed(true); 
+             setRole('admin'); 
+         } else if (data.authed) {
+             setAuthed(true);
+             setRole(data.role);
+         }
          setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -52,10 +57,15 @@ export default function App() {
     refresh(); setView('dashboard');
   };
 
-  const handleLogin = (r: string) => { setRole(r); setAuthed(true); };
+  const handleLogin = (r: string) => {
+      setRole(r);
+      setAuthed(true);
+  };
+
   const handleLogout = async () => {
       await fetch(`${API}/api/logout`, { method: 'POST' });
-      setAuthed(false); setRole('guest');
+      setAuthed(false);
+      setRole('guest');
   };
 
   if (loading) return <div className="h-screen flex items-center justify-center">Loading...</div>;
@@ -67,10 +77,11 @@ export default function App() {
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         <div className="h-16 bg-white/50 backdrop-blur-md border-b border-gray-100 px-8 flex items-center justify-between sticky top-0 z-20">
             <div className="flex items-center gap-4 text-gray-400">
-                <span className="text-sm font-medium">V1.2.1 {role === 'guest' ? '(Guest)' : '(Admin)'}</span>
+                <span className="text-sm font-medium">V1.2.1 {role === 'guest' ? '(Guest Mode)' : '(Admin)'}</span>
             </div>
-            <button onClick={handleLogout} className="text-sm text-red-500 hover:underline">退出</button>
+            <button onClick={handleLogout} className="text-sm text-red-500 hover:underline">退出登录</button>
         </div>
+
         <div className="p-6 md:p-10 flex-1 overflow-y-auto">
            {view === 'settings' ? (
               role === 'admin' ? <SettingsView /> : <div className="text-center p-20 text-gray-400">访客无法访问设置</div>
