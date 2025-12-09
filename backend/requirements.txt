@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+sqlmodel
+yt-dlp
+requests
+python-multipart
