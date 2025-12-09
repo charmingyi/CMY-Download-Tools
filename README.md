@@ -60,7 +60,7 @@ wget https://raw.githubusercontent.com/charmingyi/CMY-Download-Tools/main/instal
 
 5. **启动服务**
    \`\`\`bash
-   uvicorn backend.server:app --host 0.0.0.0 --port 8000
+   uvicorn backend.server:app --host :: --port 8000
    \`\`\`
 </details>
 

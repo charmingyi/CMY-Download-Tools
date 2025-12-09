@@ -54,7 +54,7 @@ restart_service() {
     if systemctl is-active --quiet cmy-tools; then
         systemctl restart cmy-tools
     else
-        nohup uvicorn backend.server:app --host 0.0.0.0 --port $PORT > system.log 2>&1 &
+        nohup uvicorn backend.server:app --host :: --port $PORT > system.log 2>&1 &
     fi
     echo -e "${GREEN}✅ 完成！访问地址: http://$(curl -s ifconfig.me):$PORT${NC}"
 }
@@ -80,7 +80,7 @@ After=network.target
 [Service]
 User=root
 WorkingDirectory=$WORK_DIR
-ExecStart=$WORK_DIR/venv/bin/uvicorn backend.server:app --host 0.0.0.0 --port $PORT
+ExecStart=$WORK_DIR/venv/bin/uvicorn backend.server:app --host :: --port $PORT
 Restart=always
 [Install]
 WantedBy=multi-user.target
